@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Crypt keeper by jmazzi</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Crypt keeper</h1>
+        <p>Transparent encryption for ActiveRecord that isn't over-engineered</p>
+        <p class="view"><a href="https://github.com/jmazzi/crypt_keeper">View the Project on GitHub <small>jmazzi/crypt_keeper</small></a></p>
+        <ul>
+          <li><a href="https://github.com/jmazzi/crypt_keeper/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/jmazzi/crypt_keeper/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/jmazzi/crypt_keeper">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <p><a href="http://travis-ci.org/jmazzi/crypt_keeper"><img src="https://secure.travis-ci.org/jmazzi/crypt_keeper.png?branch=master" alt="Build Status"></a></p>
+
+<p><img src="http://i.imgur.com/qf0aD.jpg" alt="CryptKeeper"></p>
+
+<h1>CryptKeeper</h1>
+
+<p>Provides transparent encryption for ActiveRecord. It is encryption agnostic. 
+You can guard your data with any encryption algorithm you want. All you need
+is a simple class that does 3 things.</p>
+
+<ol>
+<li>Takes a hash argument for <code>initialize</code>
+</li>
+<li>Provides an <code>encrypt</code> method that returns the encrypted string</li>
+<li>Provides a <code>decrypt</code> method that returns the plaintext</li>
+</ol><p>Note: Any options defined using <code>crypt_keeper</code> will be passed to <code>new</code> as a 
+hash.</p>
+
+<p>Use can see an AES example here <a href="https://github.com/jmazzi/crypt_keeper_providers/blob/master/lib/crypt_keeper_providers/aes.rb">here</a></p>
+
+<h2>Why?</h2>
+
+<p>The options available were either too complicated under the hood or had weird 
+edge cases that made the library hard to use. I wanted to write something
+simple that <em>just works</em>.</p>
+
+<h2>Usage</h2>
+
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+  <span class="n">crypt_keeper</span> <span class="ss">:field</span><span class="p">,</span> <span class="ss">:other_field</span><span class="p">,</span> <span class="ss">:encryptor</span> <span class="o">=&gt;</span> <span class="ss">:aes</span><span class="p">,</span> 
+    <span class="ss">:passphrase</span> <span class="o">=&gt;</span> <span class="s1">'super_good_password'</span>
+<span class="k">end</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="no">MyModel</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">field</span><span class="p">:</span> <span class="s1">'sometext'</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save!</span> <span class="c1">#=&gt; Your data is now encrypted</span>
+<span class="n">model</span><span class="o">.</span><span class="n">field</span> <span class="c1">#=&gt; 'sometext'</span>
+</pre></div>
+
+<p>It works with all persistences methods: <code>update_attribute</code>, <code>update_attributes</code>, 
+<code>create</code>, <code>save</code> etc.</p>
+
+<h2>Creating your own encryptor</h2>
+
+<p>Creating your own encryptor is easy. All you have to do is create a class 
+under the <code>CryptKeeperProviders</code> namespace, like this:</p>
+
+<div class="highlight"><pre><span class="k">module</span> <span class="nn">CryptKeeperProviders</span>
+  <span class="k">class</span> <span class="nc">MyEncryptor</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">options</span> <span class="o">=</span><span class="p">{})</span>
+    <span class="k">end</span>
+
+    <span class="k">def</span> <span class="nf">encrypt</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">end</span>
+
+    <span class="k">def</span> <span class="nf">decrypt</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+
+<p>Just require your code and setup your model to use it. Just pass the class name
+as an underscored symbol</p>
+
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+  <span class="n">crypt_keeper</span> <span class="ss">:field</span><span class="p">,</span> <span class="ss">:other_field</span><span class="p">,</span> <span class="ss">:encryptor</span> <span class="o">=&gt;</span> <span class="ss">:my_encryptor</span><span class="p">,</span>
+    <span class="ss">:passphrase</span> <span class="o">=&gt;</span> <span class="s1">'super_good_password'</span>
+<span class="k">end</span>
+</pre></div>
+
+<h2>Installation</h2>
+
+<p>Add this line to your application's Gemfile:</p>
+
+<pre><code>gem 'crypt_keeper'
+</code></pre>
+
+<p>And then execute:</p>
+
+<pre><code>$ bundle
+</code></pre>
+
+<p>Or install it yourself as:</p>
+
+<pre><code>$ gem install crypt_keeper
+</code></pre>
+
+<h2>Contributing</h2>
+
+<ol>
+<li>Fork it</li>
+<li>Create your feature branch (<code>git checkout -b my-new-feature</code>)</li>
+<li>Commit your changes (<code>git commit -am 'Add some feature'</code>)</li>
+<li>Push to the branch (<code>git push origin my-new-feature</code>)</li>
+<li>Create new Pull Request</li>
+</ol>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/jmazzi">jmazzi</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+    
+  </body>
+</html>
